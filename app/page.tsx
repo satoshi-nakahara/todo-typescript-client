@@ -4,6 +4,8 @@ import Todo from "./components/Todo";
 import useSWR from "swr";
 import { TodoType } from "./types";
 import { useRef } from "react";
+import { useTodos } from "./hooks/useTodos";
+import { API_URL } from "@/constants/url";
 
 async function fetcher(key: string){
   return fetch(key).then((res) => res.json());
@@ -11,14 +13,11 @@ async function fetcher(key: string){
 export default function Home() {
   
   const inputRef = useRef<HTMLInputElement | null>(null);
-  const { data, isLoading, error, mutate } = useSWR(
-    "http://localhost:8080/allTodos",
-     fetcher
-  );
+  const { todos, isLoading, error, mutate } = useTodos();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const response = await fetch(`http://localhost:8080/createTodo`, {
+    const response = await fetch(`${API_URL}/createTodo`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -28,11 +27,11 @@ export default function Home() {
     });
     if (response.ok) {
       const newTodo = await response.json();
-      mutate([...data, newTodo]); //データを再取得する
+      mutate([...todos, newTodo]); //データを再取得する
       inputRef.current!.value = ""; //inputBoxを空にする
     }
   };
-  console.log(data);
+  console.log(todos);
   return (
     <div
       className="max-w-md mx-auto bg-white shadow-lg rounded-lg overflow-hidden mt-32 py-4 px-4"
@@ -62,7 +61,7 @@ export default function Home() {
         </div>
       </form>
       <ul className="divide-y divide-gray-200 px-4">
-        {data?.map((todo: TodoType) => (
+        {todos?.map((todo: TodoType) => (
           <Todo key= {todo.id} todo={todo} />
         ))}
       </ul>
